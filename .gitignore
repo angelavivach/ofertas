@@ -3,3 +3,4 @@ digest.md
 .venv/
 __pycache__/
 pinterest_token.json
+pinterest_profile/
