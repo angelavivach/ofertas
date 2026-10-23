@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ofertas.watch</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/angelavivanco/Library/Application Support/Claude/scratch-workspaces/e8823291-624c-4515-a8e9-f66e4778d8b1/90190626-b073-4ce1-96ba-ce39e9386015/scratch-2026-10-23-930432/watch_offers.py</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>10</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/ofertas.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/ofertas.err</string>
+</dict>
+</plist>

@@ -1,0 +1,45 @@
+{
+  "vinted_domain": "www.vinted.es",
+  "wallapop_domain": "es.wallapop.com",
+  "delay_seconds": 2,
+  "red_flags": [
+    "no funciona",
+    "averiado",
+    "averia",
+    "avería",
+    "para piezas",
+    "roto",
+    "defecto",
+    "falla",
+    "sin cargador",
+    "sin mando",
+    "reparar"
+  ],
+  "chollos": {
+    "discount": 0.5,
+    "min_listings": 5,
+    "queries": [
+      "portátil",
+      "cámara de fotos",
+      "auriculares inalámbricos",
+      "PlayStation 5",
+      "iPhone",
+      "monitor",
+      "bicicleta",
+      "Nike Air Max",
+      "The North Face"
+    ]
+  },
+  "products": [
+    {"name": "Tocadiscos", "query": "tocadiscos", "max_price": 70},
+    {"name": "iPod", "query": "ipod", "max_price": 60},
+    {"name": "Ropa eme studios", "query": "eme studios", "max_price": 50},
+    {"name": "Ropa Carhartt", "query": "carhartt", "max_price": 50},
+    {"name": "Ropa Stussy", "query": "stussy", "max_price": 50},
+    {"name": "Ropa Noemotions", "query": "noemotions", "max_price": 50},
+    {"name": "Ropa Scuffers", "query": "scuffers", "max_price": 50},
+    {"name": "Ordenadores", "query": "ordenador", "max_price": 50},
+    {"name": "Servidores", "query": "servidor", "max_price": 60},
+    {"name": "Nintendo", "query": "nintendo", "max_price": 100}
+  ]
+}
