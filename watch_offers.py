@@ -148,6 +148,8 @@ def run_chollos(page, config, seen, errors, extra_queries):
             key = f"chollo:{item['site']}:{item['id']}"
             if price < median * cfg.get("min_ratio", 0.25):
                 continue  # demasiado barato para ser real: suele ser un error o una estafa
+            if not in_price_range(item["price"], config):
+                continue
             if price <= median * (1 - cfg.get("discount", 0.4)) and key not in seen:
                 seen.add(key)
                 query_deals.append({**item, "query": query, "median": median, "discount": 1 - price / median})
@@ -201,6 +203,13 @@ def read_board_titles(context, url, limit):
         if query and query not in queries:
             queries.append(query)
     return queries[:limit]
+
+
+def in_price_range(price_text, config):
+    """True si el precio está dentro del rango que quieres ver (por defecto 20-110 €)."""
+    price = parse_price(price_text)
+    rng = config.get("price_range", {})
+    return price is not None and rng.get("min", 0) <= price <= rng.get("max", float("inf"))
 
 
 def is_accessory(title, exclude_words):
@@ -346,6 +355,7 @@ def main():
                     pause(config)
                     continue
                 results = [r for r in results if not is_accessory(r["title"] + " " + r.get("text", ""), config.get("exclude_words", []))]
+                results = [r for r in results if in_price_range(r["price"], config)]
                 for item in results:
                     key = f"{item['site']}:{item['id']}"
                     is_new = key not in seen
