@@ -29,6 +29,7 @@ CONFIG_PATH = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE_DIR, "conf
 SEEN_PATH = os.path.join(BASE_DIR, "seen.json")
 DIGEST_PATH = os.path.join(BASE_DIR, "digest.md")
 PRICE_RE = re.compile(r"(\d+(?:[.,]\d{1,2})?)\s*€")
+PINTEREST_PROFILE_DIR = os.path.join(BASE_DIR, "pinterest_profile")  # sesión creada con pinterest_login.py
 TELEGRAM_MAX_CHARS = 3800  # el límite de Telegram es 4096
 MAX_OFFERS_PER_PRODUCT = 5
 
@@ -121,12 +122,12 @@ def review_description(text, red_flags):
     return [flag for flag in red_flags if flag.lower() in lowered]
 
 
-def run_chollos(page, config, seen, errors):
+def run_chollos(page, config, seen, errors, extra_queries):
     """Compara los precios de cada término en las dos webs y devuelve los anuncios
     muy por debajo de la mediana del mercado (precio de referencia automático)."""
     cfg = config.get("chollos", {})
     deals = []
-    for query in cfg.get("queries", []):
+    for query in cfg.get("queries", []) + extra_queries:
         listings = []
         for site, fn, domain in (
             ("Vinted", search_vinted, config["vinted_domain"]),
@@ -168,6 +169,38 @@ def build_deal_message(deal):
         deal["title"],
         deal["url"],
     ]) + "\n"
+
+
+def clean_pin_title(raw):
+    """Convierte el texto de un pin en una búsqueda corta: sin emojis ni 'Sin título'."""
+    text = raw.replace("Esto contiene una imagen de:", "").strip()
+    text = re.sub(r"[^\w\s'-]", " ", text)
+    text = " ".join(text.split()[:4])
+    if len(text) < 4 or text.lower() == "sin título":
+        return ""
+    return text
+
+
+def read_board_titles(context, url, limit):
+    """Lee los pines de un tablero público o con sesión iniciada y devuelve búsquedas limpias."""
+    page = context.new_page()
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        for _ in range(3):
+            page.mouse.wheel(0, 3000)
+            page.wait_for_timeout(2000)
+        alts = page.eval_on_selector_all(
+            'img[src*="pinimg"]',
+            "els => els.map(e => e.alt)",
+        )
+    finally:
+        page.close()
+    queries = []
+    for raw in alts:
+        query = clean_pin_title(raw)
+        if query and query not in queries:
+            queries.append(query)
+    return queries[:limit]
 
 
 def is_accessory(title, exclude_words):
@@ -286,7 +319,20 @@ def main():
         context = browser.new_context(locale="es-ES", viewport={"width": 1280, "height": 900})
         page = context.new_page()
 
-        run_chollos(page, config, seen, errors)  # primero: envía cada chollo al terminar su término
+        pin_queries = []
+        if config.get("pinterest_boards") and os.path.isdir(PINTEREST_PROFILE_DIR):
+            pin_context = p.chromium.launch_persistent_context(
+                PINTEREST_PROFILE_DIR, headless=True, locale="es-ES", viewport={"width": 1280, "height": 900},
+            )
+            for url in config["pinterest_boards"]:
+                try:
+                    pin_queries += read_board_titles(pin_context, url, config.get("pinterest_max_queries", 10))
+                except Exception as exc:
+                    errors.append(f"Pinterest {url}: {str(exc)[:150]}")
+            pin_context.close()
+        pin_queries = [q for q in dict.fromkeys(pin_queries) if q not in config.get("chollos", {}).get("queries", [])]
+
+        run_chollos(page, config, seen, errors, pin_queries)  # primero: envía cada chollo al terminar su término
 
         for product in config["products"]:
             for site, fn, domain in (

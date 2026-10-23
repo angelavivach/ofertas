@@ -22,6 +22,12 @@
     "no actualiza",
     "sin batería"
   ],
+  "pinterest_boards": [
+    "https://es.pinterest.com/angelavivandiaz/setup/",
+    "https://es.pinterest.com/angelavivandiaz/libros/",
+    "https://es.pinterest.com/angelavivandiaz/regalos/"
+  ],
+  "pinterest_max_queries": 10,
   "exclude_words": [
     "funda",
     "correa",
