@@ -87,11 +87,12 @@ def search_wallapop(page, domain, query, max_price):
         if url in seen_urls or amount is None or amount > max_price:
             continue
         seen_urls.add(url)
-        lines = [line for line in a["text"].splitlines() if line.strip()]
+        lines = [line for line in a["text"].splitlines() if line.strip() and not PRICE_RE.search(line)]
         results.append({
             "site": "Wallapop",
             "id": url.rsplit("/", 1)[-1],
             "title": lines[0] if lines else url,
+            "text": a["text"],
             "price": f"{amount:.2f} €",
             "url": url,
         })
@@ -136,7 +137,7 @@ def run_chollos(page, config, seen, errors):
             except Exception as exc:
                 errors.append(f"Chollos {site} / {query}: {str(exc)[:150]}")
             pause(config)
-        listings = [i for i in listings if not is_accessory(i["title"], config.get("exclude_words", []))]
+        listings = [i for i in listings if not is_accessory(i["title"] + " " + i.get("text", ""), config.get("exclude_words", []))]
         if len(listings) < cfg.get("min_listings", 5):
             continue
         median = statistics.median(parse_price(i["price"]) for i in listings)
@@ -144,6 +145,8 @@ def run_chollos(page, config, seen, errors):
         for item in listings:
             price = parse_price(item["price"])
             key = f"chollo:{item['site']}:{item['id']}"
+            if price < median * cfg.get("min_ratio", 0.25):
+                continue  # demasiado barato para ser real: suele ser un error o una estafa
             if price <= median * (1 - cfg.get("discount", 0.4)) and key not in seen:
                 seen.add(key)
                 query_deals.append({**item, "query": query, "median": median, "discount": 1 - price / median})
@@ -296,7 +299,7 @@ def main():
                     errors.append(f"{site} / {product['name']}: {str(exc)[:150]}")
                     pause(config)
                     continue
-                results = [r for r in results if not is_accessory(r["title"], config.get("exclude_words", []))]
+                results = [r for r in results if not is_accessory(r["title"] + " " + r.get("text", ""), config.get("exclude_words", []))]
                 for item in results:
                     key = f"{item['site']}:{item['id']}"
                     is_new = key not in seen
