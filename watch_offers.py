@@ -136,6 +136,7 @@ def run_chollos(page, config, seen, errors):
             except Exception as exc:
                 errors.append(f"Chollos {site} / {query}: {str(exc)[:150]}")
             pause(config)
+        listings = [i for i in listings if not is_accessory(i["title"], config.get("exclude_words", []))]
         if len(listings) < cfg.get("min_listings", 5):
             continue
         median = statistics.median(parse_price(i["price"]) for i in listings)
@@ -164,6 +165,12 @@ def build_deal_message(deal):
         deal["title"],
         deal["url"],
     ]) + "\n"
+
+
+def is_accessory(title, exclude_words):
+    """True si el título menciona un accesorio (objetivo, funda, cargador...)."""
+    lowered = title.lower()
+    return any(word.lower() in lowered for word in exclude_words)
 
 
 def load_json(path, default):
@@ -289,6 +296,7 @@ def main():
                     errors.append(f"{site} / {product['name']}: {str(exc)[:150]}")
                     pause(config)
                     continue
+                results = [r for r in results if not is_accessory(r["title"], config.get("exclude_words", []))]
                 for item in results:
                     key = f"{item['site']}:{item['id']}"
                     is_new = key not in seen
